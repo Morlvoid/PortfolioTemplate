@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>妄想天使 ❤ 给你最真实的妄想</title>
+    <!-- 引入像素风字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ========== CSS变量定义 ========== */
+        
+         :root {
+            --base-font-size: 16px;
+            /* 像素风字体栈 */
+            --font-handwriting: 'Press Start 2P', 'VT323', 'Silkscreen', 'Courier New', monospace;
+        }
+        /* 移动端适配 */
+        
+        @media (max-width: 768px) {
+             :root {
+                --base-font-size: 14px;
+            }
+        }
+        /* ========== 基础样式重置 ========== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        html {
+            font-size: var(--base-font-size);
+        }
+        
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-handwriting);
+            background-color: #ffffff;
+        }
+        /* ========== 主应用容器 ========== */
+        
+        #app {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+        }
+        /* ========== 加载界面样式 ========== */
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000000 0%, #000000 50%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loading-title {
+            font-size: 2.5rem;
+            color: #ffb7c5;
+            margin-bottom: 2rem;
+            font-family: var(--font-handwriting);
+            text-shadow: 0 0 1.25rem rgba(255, 183, 197, 0.5);
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes titleGlow {
+            0%,
+            100% {
+                text-shadow: 0 0 1.25rem rgba(255, 183, 197, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 2.5rem rgba(255, 183, 197, 0.8);
+            }
+        }
+        
+        .loading-spinner {
+            width: 3.75rem;
+            height: 3.75rem;
+            border: 0.25rem solid rgba(255, 183, 197, 0.3);
+            border-top-color: #ffb7c5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .loading-progress {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: var(--font-handwriting);
+        }
+        
+        .loading-bar-container {
+            width: 15.625rem;
+            height: 0.25rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 0.125rem;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+        
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff99c8, #ffb7c5, #ffd6e7);
+            border-radius: 0.125rem;
+            transition: width 0.3s ease;
+        }
+        /* ========== 背景层 ========== */
+        
+        .bg-stage {
+            position: absolute;
+            top: 6.25rem;
+            left: 0;
+            right: 0;
+            bottom: 6.25rem;
+            z-index: 1;
+            background-color: #1a1a2e;
+            overflow: hidden;
+        }
+        
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 0.5s ease;
+            transform: translateZ(0);
+            will-change: opacity;
+        }
+        
+        .bg-image-1 {
+            z-index: 1;
+        }
+        
+        .bg-image-2 {
+            z-index: 2;
+            opacity: 0;
+        }
+        
+        .bg-image-2.visible {
+            opacity: 1;
+        }
+        /* ========== 白色幕布层 ========== */
+        
+        .curtain {
+            position: absolute;
+            top: 6.25rem;
+            left: 0;
+            right: 0;
+            bottom: 6.25rem;
+            z-index: 3;
+            background-color: #ffffff;
+            transform: translateY(-100%);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+        
+        .curtain.closing {
+            transform: translateY(0);
+        }
+        
+        .curtain.opening {
+            transform: translateY(100%);
+        }
+        /* ========== 白色蒙版层 ========== */
+        
+        .mask {
+            position: absolute;
+            top: 6.25rem;
+            left: 0;
+            right: 0;
+            bottom: 6.25rem;
+            background-color: rgba(255, 156, 202, 0.744);
+            z-index: 2;
+            transform: translateX(0);
+            box-shadow: 0 0 1.875rem rgba(255, 156, 202, 0.744);
+            transition: transform 1.8s cubic-bezier(0.76, 0, 0.24, 1);
+            will-change: transform;
+        }
+        
+        .mask.move-out {
+            transform: translateX(100%);
+        }
+        /* ========== 水花动画容器 ========== */
+        
+        .splash-container {
+            position: absolute;
+            top: 6.25rem;
+            left: 0;
+            right: 0;
+            bottom: 6.25rem;
+            z-index: 3;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .splash-line {
+            position: absolute;
+            width: 8.75rem;
+            height: 0.5rem;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(200, 220, 255, 0.6), transparent);
+            border-radius: 6.25rem;
+            transform-origin: left center;
+            opacity: 0;
+            transform: translateZ(0);
+        }
+        
+        .splash-active .splash-line {
+            animation: waterSplash 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+        }
+        
+        @keyframes waterSplash {
+            0% {
+                opacity: 1;
+                transform: scale(0.2) rotate(var(--rot, 0deg)) translateX(2.5rem);
+                filter: blur(0.25rem);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1.2) rotate(0deg) translateX(-0.625rem);
+                filter: blur(0);
+            }
+            80% {
+                opacity: 0.7;
+                transform: scale(1.8) rotate(-8deg) translateX(-3.75rem);
+                filter: blur(0.375rem);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2.5) rotate(-15deg) translateX(-9.375rem);
+                filter: blur(0.75rem);
+            }
+        }
+        /* ========== 角色立绘层 ========== */
+        
+        .character-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        
+        .shooting-active .shooting-lines {
+            animation: shootLines 0.55s linear forwards;
+        }
+        
+        @keyframes shootLines {
+            0% {
+                opacity: 1;
+                background-position: 200% 200%;
+            }
+            60% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                background-position: -100% -100%;
+            }
+        }
+        /* 角色图片 - 高度超出视口 + 呼吸动画 */
+        
+        .characters-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .character-img {
+            height: 120vh;
+            width: auto;
+            max-width: none;
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            position: absolute;
+            z-index: 6;
+            pointer-events: none;
+            will-change: opacity, transform;
+        }
+        
+        .character-img.revealed {
+            opacity: 1;
+            animation: characterFloat 4s ease-in-out infinite;
+        }
+        
+        .character-img.hiding {
+            opacity: 0 !important;
+            transition: none !important;
+            animation: none !important;
+        }
+        
+        .character-img.position-left {
+            left: 0;
+            transform-origin: left center;
+        }
+        
+        .character-img.position-right {
+            right: 0;
+            transform-origin: right center;
+        }
+        
+        .character-img.position-center {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .character-img.position-center.revealed {
+            animation: characterFloatCenter 4s ease-in-out infinite;
+        }
+        
+        @keyframes characterFloatCenter {
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-1.5rem);
+            }
+        }
+        /* 角色上下浮动呼吸动画 */
+        
+        @keyframes characterFloat {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-1.5rem);
+            }
+        }
+        
+        .silhouette-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+        
+        .silhouette-box.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .shooting-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient( 45deg, transparent, transparent 0.625rem, rgba(0, 0, 0, 0.1) 0.625rem, rgba(0, 0, 0, 0.1) 1.25rem);
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* ========== 四角星样式 ========== */
+        
+        .stars-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            will-change: opacity, transform;
+        }
+        
+        .star.visible {
+            opacity: 1;
+            animation: starBreathe 3s ease-in-out infinite;
+        }
+        /* 四角星形状 - 使用clip-path */
+        
+        .star::before {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff3b96 0%, #ff07a8 50%, #ff00d0 100%);
+            clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%);
+            transform: translateZ(0);
+        }
+        /* 星星呼吸动画 */
+        
+        @keyframes starBreathe {
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.3) rotate(15deg);
+                opacity: 1;
+            }
+        }
+        /* 不同星星的动画延迟 */
+        
+        .star:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .star:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        
+        .star:nth-child(3) {
+            animation-delay: 1s;
+        }
+        
+        .star:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+        
+        .star:nth-child(5) {
+            animation-delay: 2s;
+        }
+        /* ========== 边框画布 ========== */
+        
+        .border-canvas {
+            position: absolute;
+            top: 2.5rem;
+            left: 7.5rem;
+            width: calc(100% - 15rem);
+            height: calc(100% - 5rem);
+            z-index: 10;
+            pointer-events: none;
+        }
+        /* ========== 氛围画布（樱花/泡泡） ========== */
+        
+        .atmosphere-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
+            pointer-events: none;
+        }
+        /* ========== 导航按钮样式 ========== */
+        
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            border: 0.125rem solid rgba(255, 59, 150, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            opacity: 0.35;
+            z-index: 30;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            opacity: 1 !important;
+            border-color: #ffb3c6;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0.5rem 1.5rem rgba(255, 179, 198, 0.4);
+        }
+        
+        .nav-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        .nav-btn svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-btn:hover svg {
+            transform: scale(1.1);
+        }
+        
+        .prev-btn {
+            left: 1.75rem;
+        }
+        
+        .prev-btn svg {
+            transform: rotate(180deg);
+        }
+        
+        .prev-btn:hover svg {
+            transform: rotate(180deg) scale(1.1);
+        }
+        
+        .next-btn {
+            right: 1.75rem;
+        }
+        /* ========== 音乐播放按钮 ========== */
+        
+        .music-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(0.5rem);
+            border: 0.0625rem solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        
+        .music-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .music-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .music-btn i {
+            font-size: 0.875rem;
+            color: #ffb7c5;
+            transition: all 0.3s ease;
+        }
+        
+        .music-btn.playing {
+            opacity: 1;
+            background: rgba(255, 183, 197, 0.3);
+            animation: musicPulse 1.5s ease-in-out infinite;
+        }
+        
+        .music-btn.playing i {
+            color: #ff6b9d;
+        }
+        
+        @keyframes musicPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 183, 197, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 0.5rem rgba(255, 183, 197, 0);
+            }
+        }
+        /* ========== 页脚样式 ========== */
+        
+        .site-footer {
+            position: absolute;
+            bottom: 1rem;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-handwriting);
+            font-size: 1.3rem;
+            color: #3e2a2a;
+            text-shadow: 0 0.125rem 0.375rem rgba(255, 255, 240, 0.6);
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .footer-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            backdrop-filter: blur(0.375rem);
+            padding: 0.375rem 1.5rem;
+            pointer-events: auto;
+            color: #2f1e2e;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-content:hover {
+            background: rgba(255, 250, 240, 0.8);
+            transform: translateY(-0.125rem);
+            box-shadow: 0 0.25rem 1rem rgba(255, 220, 200, 0.3);
+        }
+        
+        .footer-content i {
+            font-size: 1.4rem;
+            color: #925e78;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .footer-content i:hover {
+            transform: scale(1.2) rotate(5deg);
+            color: #c53b6b;
+        }
+        
+        .footer-content i:active {
+            transform: scale(0.9);
+        }
+        
+        .footer-content span {
+            margin: 0 0.25rem;
+        }
+        /* ========== 点击涟漪效果 ========== */
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 183, 197, 0.4);
+            transform: scale(0);
+            animation: rippleEffect 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        /* ========== 移动端适配 ========== */
+        
+        @media (max-width: 768px) {
+            .border-canvas {
+                top: 1.25rem;
+                left: 1.25rem;
+                width: calc(100% - 2.5rem);
+                height: calc(100% - 2.5rem);
+            }
+            .bg-stage,
+            .mask,
+            .splash-container,
+            .curtain {
+                top: 3.125rem;
+                bottom: 3.125rem;
+            }
+            .nav-btn {
+                width: 3.25rem;
+                height: 3.25rem;
+            }
+            .prev-btn {
+                left: 0.75rem;
+            }
+            .next-btn {
+                right: 0.75rem;
+            }
+            .loading-title {
+                font-size: 1.8rem;
+            }
+            .loading-bar-container {
+                width: 12.5rem;
+            }
+            .music-btn {
+                width: 2.25rem;
+                height: 2.25rem;
+                bottom: 1rem;
+                right: 1rem;
+            }
+            .music-btn i {
+                font-size: 0.75rem;
+            }
+            .character-img {
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%) !important;
+            }
+            .character-img.revealed {
+                animation: characterFloatCenter 4s ease-in-out infinite !important;
+            }
+            .character-img.mobile-hide {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 加载界面 -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-title">妄想天使</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-progress" id="loadingProgress">加载中... 0%</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
+    <!-- 主应用容器 -->
+    <div id="app">
+        <!-- 背景层 -->
+        <div class="bg-stage">
+            <div class="bg-image bg-image-1" id="bgImage1"></div>
+            <div class="bg-image bg-image-2" id="bgImage2"></div>
+        </div>
+
+        <!-- 白色幕布层 -->
+        <div class="curtain" id="curtain"></div>
+
+        <!-- 白色蒙版 -->
+        <div class="mask" id="mask"></div>
+
+        <!-- 水花容器 -->
+        <div class="splash-container" id="splashContainer">
+            <div class="splash-line"></div>
+            <div class="splash-line"></div>
+            <div class="splash-line"></div>
+        </div>
+
+        <!-- 角色立绘层 -->
+        <div class="character-layer">
+            <div class="silhouette-box" id="silhouetteBox">
+                <div class="shooting-lines"></div>
+                <div class="characters-container" id="charactersContainer"></div>
+            </div>
+        </div>
+
+        <!-- 边框画布 -->
+        <canvas class="border-canvas" id="borderCanvas"></canvas>
+
+        <!-- 四角星容器 -->
+        <div class="stars-container" id="starsContainer">
+            <div class="star" style="top: 8%; right: 15%; width: 3rem; height: 3rem;"></div>
+            <div class="star" style="top: 12%; right: 8%; width: 1rem; height: 1rem;"></div>
+            <div class="star" style="top: 5%; right: 22%; width: 2rem; height: 2rem;"></div>
+            <div class="star" style="top: 15%; right: 25%; width: 1.25rem; height: 1.25rem;"></div>
+            <div class="star" style="top: 20%; right: 5%; width: 0.875rem; height: 0.875rem;"></div>
+        </div>
+
+        <!-- 氛围画布 -->
+        <canvas class="atmosphere-canvas" id="atmosphereCanvas"></canvas>
+
+        <!-- 左侧翻页按钮 -->
+        <div class="nav-btn prev-btn" id="prevBtn">
+            <svg viewBox="0 0 1575 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1270.232615 440.556308l-309.16923-252.061539a39.384615 39.384615 0 0 1 49.782153-60.967384l385.890462 314.525538a39.384615 39.384615 0 0 1 0.630154 60.494769l-385.811692 329.255385a39.384615 39.384615 0 1 1-51.2-59.864615l296.014769-252.612924H429.607385a39.384615 39.384615 0 1 1 0-78.76923h840.62523z m-1042.35323 0a39.384615 39.384615 0 1 1 0 78.76923h-61.912616a39.384615 39.384615 0 1 1 0-78.76923h61.912616z" fill="currentColor"/>
+            </svg>
+        </div>
+
+        <!-- 右侧翻页按钮 -->
+        <div class="nav-btn next-btn" id="nextBtn">
+            <svg viewBox="0 0 1575 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1270.232615 440.556308l-309.16923-252.061539a39.384615 39.384615 0 0 1 49.782153-60.967384l385.890462 314.525538a39.384615 39.384615 0 0 1 0.630154 60.494769l-385.811692 329.255385a39.384615 39.384615 0 1 1-51.2-59.864615l296.014769-252.612924H429.607385a39.384615 39.384615 0 1 1 0-78.76923h840.62523z m-1042.35323 0a39.384615 39.384615 0 1 1 0 78.76923h-61.912616a39.384615 39.384615 0 1 1 0-78.76923h61.912616z" fill="currentColor"/>
+            </svg>
+        </div>
+
+        <!-- 页脚 -->
+        <!-- <footer class="site-footer">
+            <div class="footer-content">
+                <i class="fab fa-pixiv"></i>
+                <span> 妄想天使 </span>
+                <i class="fab fa-twitter"></i>
+                <i class="fab fa-bilibili"></i>
+            </div>
+        </footer> -->
+    </div>
+
+    <!-- 音乐播放按钮 -->
+    <div class="music-btn" id="musicBtn" title="播放/暂停音乐">
+        <i class="fas fa-music"></i>
+    </div>
+
+    <!-- 背景音乐（使用免费轻音乐） -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        (function() {
+            // ========== 作品数据配置 ==========
+            // bg1: 初始显示的背景图，bg2: 幕布揭开后显示的背景图
+            // characters: 角色图数组，positions: 对应位置（'left', 'right', 'center'）
+            const slides = [{
+                bg1: './bg1-1.png',
+                bg2: './bg1-2.png',
+                characters: ['./qianxia.png'],
+                positions: ['right'],
+                mood: 'sakura',
+                name: '千夏'
+            }, {
+                bg1: './bg2-1.png',
+                bg2: './bg2-2.png',
+                characters: ['./airui1.png', './airui2.png'],
+                positions: ['right', 'left'],
+                mood: 'aquarium',
+                name: '爱芮'
+            }];
+
+            // ========== 状态变量 ==========
+            let currentIndex = 0; // 当前幻灯片索引
+            let borderFinished = false; // 边框动画是否完成
+            let animFrame = null; // 动画帧ID
+            let borderCtx = null; // 边框画布上下文
+            let atmosCtx = null; // 氛围画布上下文
+            let atmosAnim = null; // 氛围动画ID
+            let currentMood = slides[0].mood;
+            let isLoaded = false; // 是否加载完成
+            let loadedImages = 0; // 已加载图片数
+            let totalImages = 0; // 总图片数
+            let isPlaying = false; // 音乐是否播放中
+
+            // ========== DOM元素引用 ==========
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingProgress = document.getElementById('loadingProgress');
+            const loadingBar = document.getElementById('loadingBar');
+            const mask = document.getElementById('mask');
+            const splashContainer = document.getElementById('splashContainer');
+            const silhouetteBox = document.getElementById('silhouetteBox');
+            const charactersContainer = document.getElementById('charactersContainer');
+            const bgImage1 = document.getElementById('bgImage1');
+            const bgImage2 = document.getElementById('bgImage2');
+            const curtain = document.getElementById('curtain');
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const atmosphereCanvas = document.getElementById('atmosphereCanvas');
+            const borderCanvas = document.getElementById('borderCanvas');
+            const musicBtn = document.getElementById('musicBtn');
+            const bgMusic = document.getElementById('bgMusic');
+            const starsContainer = document.getElementById('starsContainer');
+            const stars = starsContainer.querySelectorAll('.star');
+
+            // ========== 图片预加载功能 ==========
+
+            // 获取所有需要预加载的图片URL
+            function getAllImageUrls() {
+                const urls = [];
+                slides.forEach(slide => {
+                    urls.push(slide.bg1);
+                    urls.push(slide.bg2);
+                    slide.characters.forEach(char => urls.push(char));
+                });
+                return urls;
+            }
+
+            // 预加载所有图片
+            function preloadImages() {
+                return new Promise((resolve) => {
+                    const urls = getAllImageUrls();
+                    totalImages = urls.length;
+                    loadedImages = 0;
+
+                    // 更新加载进度
+                    const updateProgress = () => {
+                        const percent = Math.round((loadedImages / totalImages) * 100);
+                        loadingProgress.textContent = `加载中... ${percent}%`;
+                        loadingBar.style.width = `${percent}%`;
+                    };
+
+                    // 加载每张图片
+                    urls.forEach(url => {
+                        const img = new Image();
+                        img.onload = () => {
+                            loadedImages++;
+                            updateProgress();
+                            if (loadedImages === totalImages) {
+                                resolve();
+                            }
+                        };
+                        img.onerror = () => {
+                            loadedImages++;
+                            updateProgress();
+                            if (loadedImages === totalImages) {
+                                resolve();
+                            }
+                        };
+                        img.src = url;
+                    });
+                });
+            }
+
+            // ========== 幻灯片控制 ==========
+
+            // 加载指定索引的幻灯片
+            function loadSlide(index) {
+                const slide = slides[index];
+                bgImage1.style.backgroundImage = `url('${slide.bg1}')`;
+                bgImage2.style.backgroundImage = `url('${slide.bg2}')`;
+                bgImage2.classList.remove('visible');
+                currentMood = slide.mood;
+
+                charactersContainer.innerHTML = '';
+                const isMobile = window.innerWidth <= 768;
+
+                slide.characters.forEach((charSrc, i) => {
+                    const img = document.createElement('img');
+                    img.src = charSrc;
+                    img.alt = '立绘';
+                    img.className = 'character-img';
+
+                    const position = slide.positions[i] || 'center';
+                    img.classList.add(`position-${position}`);
+
+                    if (isMobile && i > 0) {
+                        img.classList.add('mobile-hide');
+                    }
+
+                    charactersContainer.appendChild(img);
+                });
+            }
+
+            // ========== 画布尺寸调整 ==========
+            function resizeCanvas() {
+                const w = borderCanvas.clientWidth;
+                const h = borderCanvas.clientHeight;
+                borderCanvas.width = w;
+                borderCanvas.height = h;
+                drawBorderFrame(0);
+            }
+
+            // ========== 边框动画 ==========
+            let startTime = null;
+            const animDuration = 2600;
+            let starsShown = false;
+
+            // 绘制边框帧
+            function drawBorderFrame(progress) {
+                const w = borderCanvas.width;
+                const h = borderCanvas.height;
+                if (w === 0 || h === 0) return;
+
+                const ctx = borderCtx;
+                ctx.clearRect(0, 0, w, h);
+
+                const r = 25;
+                const len = 2 * Math.PI * r + 2 * (w - 2 * r) + 2 * (h - 2 * r);
+                const drawLen = progress * len;
+
+                ctx.beginPath();
+                ctx.moveTo(r, 0);
+                ctx.lineTo(w - r, 0);
+                ctx.quadraticCurveTo(w, 0, w, r);
+                ctx.lineTo(w, h - r);
+                ctx.quadraticCurveTo(w, h, w - r, h);
+                ctx.lineTo(r, h);
+                ctx.quadraticCurveTo(0, h, 0, h - r);
+                ctx.lineTo(0, r);
+                ctx.quadraticCurveTo(0, 0, r, 0);
+                ctx.closePath();
+
+                ctx.strokeStyle = '#ff3b96';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([drawLen, len]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                if (progress >= 0.2 && progress <= 0.4 && !starsShown) {
+                    starsShown = true;
+                    stars.forEach((star, index) => {
+                        setTimeout(() => {
+                            star.classList.add('visible');
+                        }, index * 80);
+                    });
+                }
+            }
+
+            // 边框动画循环
+            function borderAnimation(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                let progress = Math.min(elapsed / animDuration, 1);
+                drawBorderFrame(progress);
+
+                if (progress < 1) {
+                    animFrame = requestAnimationFrame(borderAnimation);
+                } else {
+                    borderFinished = true;
+                    starsShown = false;
+                    startBackgroundAnimation();
+                }
+            }
+
+            // 启动边框动画
+            function startBorderAnimation() {
+                if (animFrame) cancelAnimationFrame(animFrame);
+                startTime = null;
+                borderFinished = false;
+                starsShown = false;
+                stars.forEach(star => star.classList.remove('visible'));
+                animFrame = requestAnimationFrame(borderAnimation);
+            }
+
+            // ========== 背景动画（蒙版移动 → 水花） ==========
+            function startBackgroundAnimation() {
+                mask.classList.add('move-out');
+
+                const onTransitionEnd = (e) => {
+                    if (e.propertyName === 'transform') {
+                        mask.removeEventListener('transitionend', onTransitionEnd);
+                        // 触发水花动画
+                        splashContainer.classList.add('splash-active');
+                        setTimeout(() => {
+                            splashContainer.classList.remove('splash-active');
+                        }, 700);
+
+                        // 水花后显示角色
+                        setTimeout(() => {
+                            startCharacterReveal();
+                        }, 300);
+                    }
+                };
+                mask.addEventListener('transitionend', onTransitionEnd);
+            }
+
+            // ========== 角色显示动画 ==========
+            function startCharacterReveal() {
+                silhouetteBox.classList.add('shooting-active');
+                setTimeout(() => {
+                    silhouetteBox.classList.remove('shooting-active');
+                    const charImgs = charactersContainer.querySelectorAll('.character-img');
+                    charImgs.forEach(img => img.classList.add('revealed'));
+                }, 550);
+
+                startAtmosphere(currentMood);
+            }
+
+            // ========== 氛围动画（樱花/泡泡） ==========
+            function startAtmosphere(mood) {
+                if (atmosAnim) cancelAnimationFrame(atmosAnim);
+                atmosphereCanvas.width = window.innerWidth;
+                atmosphereCanvas.height = window.innerHeight;
+                const ctx = atmosCtx;
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                let particles = [];
+                const count = mood === 'sakura' ? 15 : 12;
+
+                // 创建粒子
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        size: Math.random() * 12 + 4,
+                        speedX: mood === 'sakura' ? (Math.random() * 0.5 + 0.15) : (Math.random() * 0.2 - 0.1),
+                        speedY: mood === 'sakura' ? (Math.random() * 0.4 + 0.2) : (Math.random() * -0.6 - 0.3),
+                        opacity: Math.random() * 0.5 + 0.2,
+                        angle: Math.random() * 360,
+                    });
+                }
+
+                // 绘制樱花
+                function drawSakura() {
+                    ctx.clearRect(0, 0, width, height);
+                    particles.forEach(p => {
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate((p.angle * Math.PI) / 180);
+                        ctx.fillStyle = `rgba(255, 180, 200, ${p.opacity})`;
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, p.size * 0.6, p.size * 0.35, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        p.angle += 0.3;
+                        if (p.y > height + 30) {
+                            p.y = -20;
+                            p.x = Math.random() * width;
+                        }
+                        if (p.x > width + 30) p.x = -20;
+                        if (p.x < -30) p.x = width + 20;
+                    });
+                    atmosAnim = requestAnimationFrame(drawSakura);
+                }
+
+                // 绘制泡泡
+                function drawBubbles() {
+                    ctx.clearRect(0, 0, width, height);
+                    particles.forEach(p => {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(170, 230, 255, ${p.opacity})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.2})`;
+                        ctx.fill();
+
+                        p.y += p.speedY;
+                        p.x += p.speedX;
+                        if (p.y < -30) {
+                            p.y = height + 20;
+                            p.x = Math.random() * width;
+                        }
+                        if (p.x > width + 20) p.x = -20;
+                    });
+                    atmosAnim = requestAnimationFrame(drawBubbles);
+                }
+
+                if (mood === 'sakura') {
+                    drawSakura();
+                } else {
+                    drawBubbles();
+                }
+            }
+
+            // 停止氛围动画
+            function stopAtmosphere() {
+                if (atmosAnim) {
+                    cancelAnimationFrame(atmosAnim);
+                    atmosAnim = null;
+                }
+                atmosCtx.clearRect(0, 0, atmosphereCanvas.width, atmosphereCanvas.height);
+            }
+
+            // ========== 幻灯片切换 ==========
+            let isTransitioning = false;
+
+            function goToSlide(newIndex) {
+                if (isTransitioning) return;
+                isTransitioning = true;
+
+                stopAtmosphere();
+                mask.classList.remove('move-out');
+                const charImgs = charactersContainer.querySelectorAll('.character-img');
+                charImgs.forEach(img => {
+                    img.classList.remove('revealed');
+                    img.classList.add('hiding');
+                });
+                splashContainer.classList.remove('splash-active');
+                silhouetteBox.classList.remove('shooting-active');
+                stars.forEach(star => star.classList.remove('visible'));
+                bgImage2.classList.remove('visible');
+                curtain.classList.remove('opening');
+
+                // 先隐藏角色图，等待隐藏完成后再加载新幻灯片
+                setTimeout(() => {
+                    currentIndex = newIndex;
+                    loadSlide(currentIndex);
+                    const newCharImgs = charactersContainer.querySelectorAll('.character-img');
+                    newCharImgs.forEach(img => img.classList.remove('hiding'));
+
+                    // 幕布拉上
+                    curtain.classList.add('closing');
+
+                    // 幕布拉上完成后，开始边框动画并揭开幕布
+                    setTimeout(() => {
+                        startBorderAnimation();
+
+                        // 边框动画进行到一半时，揭开幕布并显示bg2
+                        setTimeout(() => {
+                            curtain.classList.remove('closing');
+                            curtain.classList.add('opening');
+                            bgImage2.classList.add('visible');
+                            isTransitioning = false;
+                        }, 1300);
+                    }, 800);
+                }, 100);
+            }
+
+            // 下一张
+            function nextSlide() {
+                const newIndex = (currentIndex + 1) % slides.length;
+                goToSlide(newIndex);
+            }
+
+            // 上一张
+            function prevSlide() {
+                const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+                goToSlide(newIndex);
+            }
+
+            // ========== 音乐控制 ==========
+            function toggleMusic() {
+                if (isPlaying) {
+                    bgMusic.pause();
+                    musicBtn.classList.remove('playing');
+                    musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+                } else {
+                    bgMusic.play().catch(() => {
+                        console.log('音乐播放需要用户交互');
+                    });
+                    musicBtn.classList.add('playing');
+                    musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                isPlaying = !isPlaying;
+            }
+
+            // ========== 点击涟漪效果 ==========
+            function createRipple(event, element) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+
+                const rect = element.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${event.clientX - rect.left - size / 2}px`;
+                ripple.style.top = `${event.clientY - rect.top - size / 2}px`;
+
+                element.appendChild(ripple);
+
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            // ========== 事件绑定 ==========
+            prevBtn.addEventListener('click', (e) => {
+                createRipple(e, prevBtn);
+                prevSlide();
+            });
+
+            nextBtn.addEventListener('click', (e) => {
+                createRipple(e, nextBtn);
+                nextSlide();
+            });
+
+            musicBtn.addEventListener('click', toggleMusic);
+
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') prevSlide();
+                if (e.key === 'ArrowRight') nextSlide();
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    toggleMusic();
+                }
+            });
+
+            // 窗口大小变化处理
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                if (!borderFinished) {
+                    drawBorderFrame(0);
+                }
+                atmosphereCanvas.width = window.innerWidth;
+                atmosphereCanvas.height = window.innerHeight;
+
+                // 更新角色显示（处理屏幕旋转等）
+                const isMobile = window.innerWidth <= 768;
+                const charImgs = charactersContainer.querySelectorAll('.character-img');
+                charImgs.forEach((img, i) => {
+                    if (isMobile && i > 0) {
+                        img.classList.add('mobile-hide');
+                    } else {
+                        img.classList.remove('mobile-hide');
+                    }
+                });
+            });
+
+            // ========== 初始化 ==========
+            async function init() {
+                // 初始化画布上下文
+                borderCtx = borderCanvas.getContext('2d');
+                atmosCtx = atmosphereCanvas.getContext('2d');
+
+                // 加载第一张幻灯片
+                loadSlide(0);
+                resizeCanvas();
+
+                // 预加载所有图片
+                await preloadImages();
+
+                // 标记加载完成
+                isLoaded = true;
+                loadingScreen.classList.add('hidden');
+
+                // 延迟启动边框动画
+                setTimeout(() => {
+                    startBorderAnimation();
+
+                    // 边框动画进行到一半时，揭开幕布并显示bg2
+                    setTimeout(() => {
+                        curtain.classList.add('opening');
+                        bgImage2.classList.add('visible');
+                    }, 1300);
+                }, 300);
+            }
+
+            // 启动应用
+            init();
+        })();
+    </script>
+</body>
+
+</html>
