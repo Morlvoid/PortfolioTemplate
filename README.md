@@ -55,6 +55,76 @@ const slides = [
 直接在浏览器中打开文件，或使用本地服务器（如 Live Server）运行。
 
 ### 🎨 自定义指南
+#### 如何添加新角色
+
+添加新角色需要修改 `index.html` 中的 `slides` 数组（约第 819 行）。按照以下步骤操作：
+
+**步骤 1：准备图片文件**
+- 准备两张背景图：`bgX-1.png`（初始背景）和 `bgX-2.png`（幕布揭开后背景）
+- 准备角色立绘图：`your-character.png`（支持多个角色）
+
+将图片文件放入项目根目录或子文件夹中。
+
+**步骤 2：在 slides 数组中添加新配置**
+
+在 `index.html` 中找到 `const slides = [...]` 数组，添加新的对象：
+
+```javascript
+const slides = [{
+    bg1: './bg1-1.png',
+    bg2: './bg1-2.png',
+    characters: ['./qianxia.png'],
+    positions: ['right'],
+    mood: 'sakura',
+    name: '千夏'
+}, {
+    bg1: './bg2-1.png',
+    bg2: './bg2-2.png',
+    characters: ['./airui1.png', './airui2.png'],
+    positions: ['right', 'left'],
+    mood: 'aquarium',
+    name: '爱芮'
+}, {
+    // 新增角色配置
+    bg1: './bg3-1.jpg',        // 你的初始背景图
+    bg2: './bg3-2.jpg',        // 你的第二张背景图
+    characters: ['./nangongyu.png'],  // 角色立绘路径（可多个）
+    positions: ['center'],     // 角色位置：'left' / 'right' / 'center'
+    mood: 'sakura',            // 氛围效果：'sakura'（樱花）或 'aquarium'（气泡）
+    name: '南宫羽'             // 角色名称
+}];
+```
+
+**配置参数说明：**
+
+| 参数 | 类型 | 说明 | 可选值 |
+|------|------|------|--------|
+| `bg1` | string | 初始背景图路径 | 相对路径或绝对URL |
+| `bg2` | string | 幕布揭开后的背景图路径 | 相对路径或绝对URL |
+| `characters` | array | 角色立绘路径数组 | 支持多个角色，如 `['./char1.png', './char2.png']` |
+| `positions` | array | 每个角色的位置 | `'left'`（左）、`'right'`（右）、`'center'`（中） |
+| `mood` | string | 氛围效果 | `'sakura'`（樱花飘落）、`'aquarium'`（气泡上升） |
+| `name` | string | 角色名称 | 任意字符串 |
+
+**注意事项：**
+1. `characters` 和 `positions` 数组长度必须一致
+2. 图片路径支持 `.png`、`.jpg`、`.jpeg` 等常见格式
+3. 建议背景图尺寸一致，避免切换时出现布局问题
+4. 角色立绘建议使用透明背景的 PNG 格式
+
+**示例：添加双角色配置**
+
+```javascript
+{
+    bg1: './bg4-1.png',
+    bg2: './bg4-2.png',
+    characters: ['./character1.png', './character2.png'],
+    positions: ['left', 'right'],  // 左右排列
+    mood: 'aquarium',
+    name: '双人展示'
+}
+```
+
 #### 调整动画速度
 幕布拉开速度：修改 CSS 中 .curtain 的 transition 时间（默认 0.8s）
 
